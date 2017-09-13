@@ -126,7 +126,9 @@ def post(id):
 @app.route('/test')
 @login_required
 def test():
-	return 'login required test'
+	user = User.query.get(1)
+	comments = user.comments
+	return render_template('test.html', comments = comments)
 
 @app.route('/changepassword', methods = ['GET', 'POST'])
 @login_required
