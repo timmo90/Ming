@@ -50,7 +50,10 @@ class Follow(db.Model):
 	follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key = True)
 	followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key = True)
 	timestamp = db.Column(db.DateTime, default = datetime.utcnow)
-		
+
+	def __init__(self, follower, followed):
+		self.follower = follower
+		self.followed = followed		
 
 class User(UserMixin, db.Model):
 	__tablename__ = 'users'
@@ -67,12 +70,12 @@ class User(UserMixin, db.Model):
 	last_seen = db.Column(db.DateTime(), default = datetime.utcnow)
 	avatar_hash = db.Column(db.String(32))
 	posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
-	# followed = db.relationship('Follow', foreign_keys = [Follow.follower_id],
-	# 	backref = db.backref('follower', lazy = 'joined'), lazy = 'dynamic',
-	# 	cascade = 'all, delete-orphan')
-	# followers = db.relationship('Follow', foreign_keys = [Follow.followed_id],
-	# 	backref = db.backref('followed', lazy = 'joined'),
-	# 	lazy = 'dynamic', cascade = 'all, delete-orphan')
+	followed = db.relationship('Follow', foreign_keys = [Follow.follower_id],
+		backref = db.backref('follower', lazy = 'joined'), lazy = 'dynamic',
+		cascade = 'all, delete-orphan')
+	followers = db.relationship('Follow', foreign_keys = [Follow.followed_id],
+		backref = db.backref('followed', lazy = 'joined'),
+		lazy = 'dynamic', cascade = 'all, delete-orphan')
 	comments = db.relationship('Comment', backref = 'author', lazy = 'dynamic')
 
 	def __init__(self, **kwargs):
@@ -85,8 +88,6 @@ class User(UserMixin, db.Model):
 			self.role = Role.query.filter_by(permissions = 0xff).first()
 		if self.role is None:
 			self.role = Role.query.filter_by(default = True).first()
-		# if kwargs.get():
-		# 	pass
 		
 
 	@property
@@ -126,6 +127,23 @@ class User(UserMixin, db.Model):
 		
 	def is_administrator(self):
 		return self.can(Permission.ADMINISTER)
+
+	def is_following(self, user):
+		return self.followed.filter_by(followed_id = user.id).first() is not None
+
+	def is_followed_by(self, user):
+		return self.followers.filter_by(follower_id = user.id).first() is not None
+
+	def follow(self, user):
+		if not self.is_following(user):
+			f = Follow(self, user)
+			db.session.add(f)
+
+	def unfollow(self, user):
+		f = self.followed.filter_by(followed_id = user.id).first()
+		if f:
+			db.session.delete(f)
+
 
 class AnonymousUser(AnonymousUserMixin):
 	def can(self, permissions):
