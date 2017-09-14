@@ -124,11 +124,13 @@ def post(id):
 
 
 @app.route('/test')
-@login_required
+# @login_required
 def test():
-	user = User.query.get(1)
-	comments = user.comments
-	return render_template('test.html', comments = comments)
+	# user = User.query.get(1)
+	# comments = user.comments
+	# return render_template('test.html', comments = comments)
+	User.add_self_follows()
+	return 'add_self_follows successful'
 
 @app.route('/changepassword', methods = ['GET', 'POST'])
 @login_required
