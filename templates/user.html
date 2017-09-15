@@ -28,7 +28,7 @@
 	</p>
 	<p>{{user.posts.count()}} blog posts. {{user.comments.count()}} comments.</p>
 	<p>
-		{% if current_user.can(Permission.FOLLOW) and user != curretn_user %}
+		{% if current_user.can(Permission.FOLLOW) and user != current_user %}
 			{% if not current_user.is_following(user) %}
 			<a class="btn btn-primary" href="{{url_for('follow', username = user.username)}}">Follow</a>
 			{% else %}

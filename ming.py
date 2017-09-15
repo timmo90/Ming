@@ -29,10 +29,9 @@ from decorators import admin_required, permission_required
 from forms import LoginForm, RegisterForm, ChangePasswordForm, \
 	EditProfileForm, EditProfileAdminForm, PostForm, CommentForm
 
-# @app.before_request
-# def before_request():
-# 	if current_user:
-# 		current_user.ping()
+@app.context_processor
+def inject_permissions():
+	return dict(Permission = Permission)
 
 @app.route('/', methods = ['GET', 'POST'])
 def index():
@@ -52,7 +51,7 @@ def index():
 		page, per_page = config.MING_POSTS_PER_PAGE, error_out = False)
 	posts = pagination.items
 	return render_template('index.html', form = form, posts = posts,
-		Permission = Permission, pagination = pagination)
+		 pagination = pagination)
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
@@ -124,7 +123,37 @@ def post(id):
 		page, per_page = config.MING_COMMENTS_PER_PAGE, error_out = False)
 	comments = pagination.items
 	return render_template('post.html', posts = [post], form = form,
-		comments = comments, pagination = pagination, Permission = Permission)
+		comments = comments, pagination = pagination)
+
+
+@app.route('/moderate')
+@login_required
+@permission_required(Permission.MODERATE_COMMMETS)
+def moderate():
+	page = request.args.get('page', 1, type = int)
+	pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
+		page, per_page = config.MING_COMMENTS_PER_PAGE, error_out = False)
+	comments = pagination.items
+	return render_template('moderate.html', comments = comments, 
+		pagination= pagination, page = page)
+	
+@app.route('/moderate/enable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE_COMMMETS)
+def moderate_enable(id):
+	comment = Comment.query.get_or_404(id)
+	comment.disabled = False
+	db.session.add(comment)
+	return redirect(url_for('moderate', page = request.args.get('page', 1, type = int)))
+
+@app.route('/moderate/disable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE_COMMMETS)
+def moderate_disable(id):
+	comment = Comment.query.get_or_404(id)
+	comment.disabled = 1
+	db.session.add(comment)
+	return redirect(url_for('moderate', page = request.args.get('page', 1, type = int)))
 
 
 @app.route('/test')
@@ -160,8 +189,7 @@ def user(username):
 	if user is None:
 		abort(404)
 	posts = user.posts.order_by(Post.timestamp.desc()).all()
-	return render_template('user.html', user = user, posts = posts,
-		Permission = Permission)
+	return render_template('user.html', user = user, posts = posts)
 
 
 @app.route('/follow/<username>')

@@ -12,7 +12,7 @@ class Permission:
 	FOLLOW = 0X01
 	COMMENT = 0X02
 	WRITE_ARTICLES = 0X04
-	MODERARE_COMMMETS = 0X08
+	MODERATE_COMMMETS = 0X08
 	ADMINISTER = 0X80
 
 class Role(db.Model):
@@ -209,7 +209,7 @@ class Comment(db.Model):
 	body = db.Column(db.Text)
 	body_html = db.Column(db.Text)
 	timestamp = db.Column(db.DateTime, default = datetime.utcnow)
-	disabled = db.Column(db.Boolean)
+	disabled = db.Column(db.Boolean, default = 0)
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 	post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
