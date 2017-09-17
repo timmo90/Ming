@@ -38,6 +38,7 @@
                         Account <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a href="{{url_for('user', username = current_user.username)}}">Signed in as <b>{{current_user.username}}</b></a></li>
                         <li><a href="{{ url_for('test') }}">Chage Password</a></li>
                         <li><a href="{{ url_for('test') }}">Chage Email</a></li>
                         <li><a href="{{ url_for('logout') }}">Log Out</a></li>
