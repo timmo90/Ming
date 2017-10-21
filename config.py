@@ -1,12 +1,28 @@
 # -*- coding: utf-8 -*-
 
-MING_ADMIN = 'moyitian90@163.com'
+import os
 
+MING_ADMIN = os.environ.get('MAIL_USERNAME')
+
+# SECRET_KEY = os.environ.get('SECRET_KEY_MING')
 SECRET_KEY = 'H\xe0z\xadR\x03\xab\xeb\xd0\x14\xae\xe9\xab\xcd2\xf3\x8dHC\xc4\x04k\x92\x18'
 SQLALCHEMY_DATABASE_URI = 'mysql://root:feng@localhost:3306/ming'
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_RECORD_QUERIES = True
+MING_DB_QUERY_TIMEOUT = 0.5
 MING_POSTS_PER_PAGE = 10
 MING_COMMENTS_PER_PAGE = 20
 MING_FOLLOWERS_PER_PAGE = 20
+
+MAIL_SERVER = 'smtp.163.com'
+# MAIL_USE_TLS = True
+MAIL_USE_SSL = True
+MAIL_PORT = 465
+MAIL_USERNAME = 'moyitian90@163.com'
+# MAIL_USERNAME = MING_ADMIN
+MIAL_PASSWORD = 'tmtm001001'
+# MIAL_PASSWORD = os.environ.get('MAIL163_PASSWORD')
+MING_MAIL_SUBJECT_PREFIX = '[MING]'
+MING_MAIL_SENDER = 'Ming admin <moyitian90@163.com>'
+

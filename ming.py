@@ -6,18 +6,29 @@ from flask_bootstrap import Bootstrap
 import config
 from flask_moment import Moment
 from flask_pagedown import PageDown 
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, get_debug_queries
+from flask_mail import Mail, Message
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 
 
 app = Flask(__name__)
 app.config.from_object(config)
 
+app.config['MAIL_SERVER'] = 'smtp.163.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'moyitian90@163.com'
+app.config['MIAL_PASSWORD'] = 'tmtm001001'
+app.config['MING_MAIL_SUBJECT_PREFIX'] = '[MING]'
+app.config['MING_MAIL_SENDER'] = 'Ming admin <moyitian90@163.com>'
+# app.config['MAIL_USE_TLS'] = True
+
 db = SQLAlchemy(app)
 bootstrap = Bootstrap(app)
 login_manager = LoginManager(app)
 moment = Moment(app)
 pagedown = PageDown(app)
+mail = Mail(app)
 
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
@@ -28,6 +39,8 @@ from models import Permission, User, Role, Post, Comment
 from decorators import admin_required, permission_required
 from forms import LoginForm, RegisterForm, ChangePasswordForm, \
 	EditProfileForm, EditProfileAdminForm, PostForm, CommentForm
+from send_email import send_email
+
 
 @app.context_processor
 def inject_permissions():
@@ -157,13 +170,13 @@ def moderate_disable(id):
 
 
 @app.route('/test')
-# @login_required
+@login_required
 def test():
-	# user = User.query.get(1)
-	# comments = user.comments
-	# return render_template('test.html', comments = comments)
-	User.add_self_follows()
-	return 'add_self_follows successful'
+	thr = send_email('1530731815@qq.com', 'Confirm you account', '/email/confirm',
+		user = current_user)
+	if thr:
+		return 'successful'
+	return 'fail'
 
 @app.route('/changepassword', methods = ['GET', 'POST'])
 @login_required
@@ -293,3 +306,14 @@ def edit_profile_admin(id):
 	form.location.data = user.location
 	form.about_me.data = user.about_me
 	return render_template('edit_profile.html', form = form, user = user)
+
+
+@app.after_app_request
+def after_request(response):
+	for query in get_debug_queries():
+		if query.duration >= config.MING_QUERY_TIMEOUT:
+			current_app.logger.warning(
+				'Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n' %(
+					query.statement, query.parameters, query.duration, query.context)
+				)
+	return response
